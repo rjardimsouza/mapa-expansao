@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Expansão - ARCA Church</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -12,6 +13,11 @@
             <div class="header-left">
                 <h1>🌿 MAPA DE EXPANSÃO</h1>
                 <p>ARCA CHURCH</p>
+            </div>
+            <div class="header-right">
+                <button id="updateBtn" class="update-btn" title="Atualizar dados do XLSX">
+                    🔄 Atualizar Dados
+                </button>
             </div>
             <div class="resume-panel">
                 <h3>RESUMO GERAL</h3>
@@ -72,11 +78,23 @@
             </div>
         </div>
 
+        <!-- Modal para feedback -->
+        <div id="modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle">Sucesso!</h2>
+                <p id="modalMessage"></p>
+                <button id="modalBtn" class="modal-button">Fechar</button>
+            </div>
+        </div>
+
         <footer class="footer">
             <p>📊 Mapa de Hierarquia da ARCA Church | Dados carregados de: <code>data.json</code></p>
+            <p id="lastUpdate" style="font-size: 0.9em; margin-top: 5px; color: #999;"></p>
         </footer>
     </div>
 
+    <script src="xlsx-handler.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
