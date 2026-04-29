@@ -16,7 +16,10 @@
             <div class="resume-panel">
                 <h3>RESUMO GERAL</h3>
                 <div class="resume-item" id="resume-content">
-                    <!-- Preenchido por JavaScript -->
+                    <div class="resume-stat">
+                        <span>⏳</span>
+                        <span>Carregando dados...</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -44,16 +47,36 @@
             </div>
         </div>
 
+        <div class="legend legend-status">
+            <div class="legend-item">
+                <span class="legend-icon">👍</span>
+                <span>≥ 6 meses</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-icon">⚠️</span>
+                <span>3-6 meses</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-icon">🔴</span>
+                <span>0-3 meses</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-icon">🔵</span>
+                <span>Vencido</span>
+            </div>
+        </div>
+
         <div class="hierarchy-container" id="hierarchyContainer">
-            <!-- Preenchido por JavaScript -->
+            <div style="text-align: center; padding: 40px; color: #999;">
+                <p>⏳ Carregando dados...</p>
+            </div>
         </div>
 
         <footer class="footer">
-            <p>Este mapa mostra o fluxo de multiplicação da ARCA CHURCH. Cada linha representa uma geração.</p>
+            <p>📊 Mapa de Hierarquia da ARCA Church | Dados carregados de: <code>data.json</code></p>
         </footer>
     </div>
 
-    <script src="data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
