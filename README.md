@@ -1,169 +1,189 @@
 # 🌿 Mapa de Expansão - ARCA CHURCH
 
-Visualização hierárquica interativa da estrutura de expansão da ARCA CHURCH baseada em planilha do Google Sheets.
+Visualização hierárquica interativa da estrutura de expansão da ARCA CHURCH baseada em arquivo JSON local.
 
-## 📋 Requisitos
+## 📋 Quick Start
 
-- Browser moderno (Chrome, Firefox, Safari, Edge)
-- Acesso à internet (para integração com Google Sheets)
-- API Key do Google Sheets (ver configuração abaixo)
-
-## 🚀 Quick Start
-
-1. **Clone ou faça download do repositório**
+### 1️⃣ Clone o Repositório
 ```bash
 git clone https://github.com/rjardimsouza/mapa-expansao.git
 cd mapa-expansao
 ```
 
-2. **Abra `index.html` em seu navegador**
+### 2️⃣ Abra em um Servidor Local
+
+#### Opção A: Python
 ```bash
-# Opção 1: Abra diretamente
-open index.html
-
-# Opção 2: Use um servidor local (recomendado)
+# Python 3
 python -m http.server 8000
-# Acesse: http://localhost:8000
+
+# Python 2
+python -m SimpleHTTPServer 8000
+
+# Depois acesse: http://localhost:8000
 ```
 
-## 🔗 Integração com Google Sheets
-
-### Passo 1: Preparar a Planilha
-
-Sua planilha deve ter as seguintes colunas (nessa ordem):
-
-| ID | Nome | Tipo | ID Pai | ID Supervisão | Nome Exibição | Data Criação | Ativa? | Próxima Multiplicação |
-|---|---|---|---|---|---|---|---|---|
-| 1 | ARCA CHURCH | Igreja | - | - | ARCA CHURCH IGREJA | 2017-12-03 | Sim | - |
-| 2 | SHALOM | Supervisão | 1 | 1 | SHALOM SUPERVISÃO | 2018-03-05 | Sim | - |
-
-**Importante:** 
-- `Ativa?` deve conter "Sim" ou "Não"
-- `Próxima Multiplicação` deve estar em formato YYYY-MM-DD
-- `Tipo` pode ser: Igreja, Supervisão, Célula, Nova Célula
-
-### Passo 2: Configurar Google Sheets API
-
-1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
-2. Crie um novo projeto
-3. Ative a API "Google Sheets API"
-4. Crie uma chave de API (Credentials > API Key)
-5. Copie sua **Sheet ID** da URL: `https://docs.google.com/spreadsheets/d/{SHEET_ID}/...`
-
-### Passo 3: Atualizar Configuração
-
-Edite `data.js` e substitua:
-
-```javascript
-const GOOGLE_SHEETS_CONFIG = {
-    API_KEY: 'SEU_API_KEY_AQUI',
-    SHEET_ID: '19AU6VJ1YCkeRzLsn6Kg8gHttR78VZ6bha3fEC8twDXQ',
-    RANGE: 'Sheet1!A1:J1000'
-};
+#### Opção B: Node.js (http-server)
+```bash
+npx http-server
 ```
 
-### Passo 4: Usar no Código
+#### Opção C: Abrir Diretamente
+```bash
+# No navegador, abra:
+file:///caminho/completo/para/mapa-expansao/index.html
+```
 
-Modifique `script.js` na função `loadHierarchyData()`:
+## 📊 Estrutura de Dados
 
-```javascript
-async function loadHierarchyData() {
-    const dados = await window.dataSource.fetchFromGoogleSheets();
-    return dados || hierarchyData; // Fallback para dados de exemplo
+Os dados estão armazenados em `data.json`. Cada item deve ter:
+
+```json
+{
+    "id": 1,
+    "nome": "ARCA CHURCH",
+    "tipo": "Igreja",
+    "idPai": null,
+    "idSupervisao": null,
+    "nomeExibicao": "ARCA CHURCH\nIGREJA",
+    "dataCriacao": "2017-12-03",
+    "ativa": true,
+    "proximaMultiplicacao": null
 }
 ```
 
-## 🎨 Tipos de Caixas e Cores
+### Campos Obrigatórios:
 
-| Tipo | Cor | Código Hex |
-|---|---|---|
-| Igreja | Azul Escuro | #1e3a5f |
-| Supervisão | Verde | #6ba14f |
-| Célula | Amarelo | #f4d35e |
-| Nova Célula | Roxo | #d4a5d9 |
-| Inativa | Cinza | #cccccc |
+| Campo | Tipo | Descrição | Exemplo |
+|-------|------|-----------|---------|
+| `id` | número | ID único do item | 1 |
+| `nome` | string | Nome do item | "ARCA CHURCH" |
+| `tipo` | string | Tipo: Igreja, Supervisão, Célula, Nova Célula | "Igreja" |
+| `idPai` | número/null | ID do item pai | 1 ou null |
+| `idSupervisao` | número/null | ID da supervisão | 1 ou null |
+| `nomeExibicao` | string | Nome para exibir (use \n para quebra de linha) | "ARCA CHURCH\nIGREJA" |
+| `dataCriacao` | string | Data no formato YYYY-MM-DD | "2017-12-03" |
+| `ativa` | boolean | Status do item | true ou false |
+| `proximaMultiplicacao` | string/null | Data da próxima multiplicação YYYY-MM-DD | "2026-10-20" ou null |
 
-## 📊 Ícones de Status de Multiplicação
+## 🎨 Tipos de Caixas
 
-O status é calculado automaticamente com base na coluna "Próxima Multiplicação":
+| Tipo | Cor | Classe CSS |
+|------|-----|-----------|
+| Igreja | 🟦 Azul Escuro (#1e3a5f) | `.chiesa` |
+| Supervisão | 🟢 Verde (#6ba14f) | `.supervisao` |
+| Célula | 🟡 Amarelo (#f4d35e) | `.celula` |
+| Nova Célula | 🟣 Roxo (#d4a5d9) | `.nova-celula` |
+| Inativa | ⚫ Cinza (#cccccc) | `.inativa` |
 
-| Ícone | Significado | Intervalo |
-|---|---|---|
-| 👍 Verde | Em dia | ≥ 6 meses |
-| ⚠️ Amarelo | Atenção | 3-6 meses |
-| 🔴 Vermelho | Urgente | 0-3 meses |
-| 🔵 Roxo | Vencido | < 0 meses |
+**Nota:** Células com `ativa: false` aparecem em cinza automaticamente.
+
+## 🔔 Ícones de Status de Multiplicação
+
+O status é calculado automaticamente comparando a data atual com `proximaMultiplicacao`:
+
+| Ícone | Status | Intervalo |
+|-------|--------|-----------|
+| 👍 | Verde (em dia) | ≥ 6 meses |
+| ⚠️ | Amarelo (atenção) | 3-6 meses |
+| 🔴 | Vermelho (urgente) | 0-3 meses |
+| 🔵 | Roxo (vencido) | < 0 meses |
 
 ## 📂 Estrutura de Arquivos
 
 ```
 mapa-expansao/
-├── index.html          # Página principal
-├── styles.css          # Estilos e layout
-├── script.js           # Lógica de renderização
-├── data.js             # Integração com Google Sheets
-├── data.json           # (Opcional) Dados locais
-└── README.md           # Este arquivo
+├── index.html          # 📄 Página principal
+├── styles.css          # 🎨 Estilos e layout
+├── script.js           # ⚙️ Lógica de renderização
+├── data.json           # 📊 Dados da hierarquia
+└── README.md           # 📖 Este arquivo
 ```
 
-## 🔧 Funcionalidades
+## 🔧 Como Usar Seus Dados
 
-✅ Visualização hierárquica em tempo real  
-✅ Agrupamento por gerações/níveis  
-✅ Estatísticas resumidas (Igreja, Supervisões, Células, etc.)  
-✅ Caixas cinzas para células inativas  
-✅ Ícones de status de multiplicação  
-✅ Datas discretas de criação  
-✅ Design responsivo (mobile/tablet/desktop)  
-✅ Caixas interativas (clicáveis)  
-✅ Integração com Google Sheets  
+### Opção 1: Editar `data.json` Diretamente
 
-## 🛠️ Customização
+1. Abra `data.json`
+2. Substitua os dados de exemplo
+3. Salve o arquivo
+4. Recarregue a página no navegador
 
-### Alterar Cores
+### Opção 2: Converter Planilha Excel para JSON
+
+Use um conversor online:
+- [Excel to JSON Online](https://www.convertcsv.com/excel-to-json.htm)
+- [CloudConvert](https://cloudconvert.com/xlsx-to-json)
+
+Passos:
+1. Exporte sua planilha do Google Sheets como CSV/XLSX
+2. Use o conversor para transformar em JSON
+3. Copie o resultado para `data.json`
+4. Recarregue a página
+
+## 🖥️ Funcionalidades
+
+✅ **Hierarquia Visual** com agrupamento por geração  
+✅ **Cores Automáticas** por tipo de item  
+✅ **Ícones de Multiplicação** com status  
+✅ **Resumo Estatístico** geral  
+✅ **Datas Discretas** de criação  
+✅ **Caixas Cinzas** para itens inativos  
+✅ **Design Responsivo** (mobile/tablet/desktop)  
+✅ **Sem dependências externas** (JavaScript puro)  
+✅ **Sem API Key necessária** (dados locais)  
+
+## 📱 Compatibilidade
+
+- ✅ Chrome 90+
+- ✅ Firefox 88+
+- ✅ Safari 14+
+- ✅ Edge 90+
+- ✅ Mobile browsers
+
+## 🐛 Troubleshooting
+
+### "Dados não carregam"
+1. Verifique se `data.json` existe no mesmo diretório
+2. Verifique o console do navegador (F12 > Console)
+3. Certifique-se de que está usando um servidor local (não `file://`)
+4. Valide o JSON em [jsonlint.com](https://www.jsonlint.com/)
+
+### "Caixas aparecem vazias"
+- Verifique se o campo `nomeExibicao` tem conteúdo
+- Use `\n` para quebras de linha no nome
+
+### "Ícone de status não aparece"
+- Verifique se `proximaMultiplicacao` está no formato YYYY-MM-DD
+- Deixe como `null` se não houver data
+
+## 🎨 Personalizar Cores
 
 Edite `styles.css`:
 
 ```css
 .box.chiesa {
-    background-color: #1e3a5f; /* Altere aqui */
-    color: white;
+    background-color: #1e3a5f; /* Azul - Igreja */
+}
+
+.box.supervisao {
+    background-color: #6ba14f; /* Verde - Supervisão */
+}
+
+.box.celula {
+    background-color: #f4d35e; /* Amarelo - Célula */
+}
+
+.box.nova-celula {
+    background-color: #d4a5d9; /* Roxo - Nova Célula */
+}
+
+.box.inativa {
+    background-color: #cccccc; /* Cinza - Inativa */
 }
 ```
 
-### Alterar Ícones de Status
-
-Edite `script.js` na função `getStatusIcon()`:
-
-```javascript
-if (meses >= 6) {
-    return '<span class="box-status-icon icon-ok">👍</span>'; // Altere o emoji
-}
-```
-
-### Adicionar Novos Campos
-
-1. Adicione coluna na planilha
-2. Atualize índice em `parseSheetData()` (data.js)
-3. Use o novo campo onde necessário
-
-## 🐛 Troubleshooting
-
-### "CORS Error" ao carregar dados
-- Certifique-se de que a API Key está correta
-- Verifique se a Sheet ID está correta
-- A planilha deve ser pública ou compartilhada
-
-### Dados não carregam
-- Verifique console (F12) para erros
-- Confirme que as colunas estão na ordem correta
-- Teste com `loadFromLocalJSON()` primeiro
-
-### Caixas aparecem vazias
-- Verifique se a coluna "Nome" tem dados
-- Confirme se "Nome Exibição" está preenchido
-
-## 📝 Exemplo de Dados
+## 📝 Exemplo de Dados Completo
 
 ```json
 [
@@ -177,35 +197,57 @@ if (meses >= 6) {
         "dataCriacao": "2017-12-03",
         "ativa": true,
         "proximaMultiplicacao": null
+    },
+    {
+        "id": 2,
+        "nome": "SHALOM",
+        "tipo": "Supervisão",
+        "idPai": 1,
+        "idSupervisao": 1,
+        "nomeExibicao": "SHALOM\nSUPERVISÃO",
+        "dataCriacao": "2018-03-05",
+        "ativa": true,
+        "proximaMultiplicacao": null
+    },
+    {
+        "id": 3,
+        "nome": "ABA PAI",
+        "tipo": "Célula",
+        "idPai": 2,
+        "idSupervisao": 2,
+        "nomeExibicao": "ABA PAI\nCÉLULA",
+        "dataCriacao": "2018-09-10",
+        "ativa": false,
+        "proximaMultiplicacao": null
     }
 ]
 ```
 
-## 📱 Responsividade
+## 💡 Dicas
 
-A página foi otimizada para:
-- 📱 Mobile (até 480px)
-- 📲 Tablet (481px - 768px)
-- 🖥️ Desktop (acima de 768px)
+- Use quebras de linha (`\n`) no `nomeExibicao` para melhor legibilidade
+- Deixe `idPai` como `null` para itens raiz (Igreja)
+- Sempre inclua `ativa` (true ou false)
+- Datas devem estar em YYYY-MM-DD
+- JSON deve estar válido (sem aspas desemparelhadas)
 
-## 🔐 Segurança
+## 🚀 Próximos Passos
 
-⚠️ **Importante:** Nunca coloque sua API Key diretamente no código para produção!
-
-Para produção, use:
-- Variáveis de ambiente
-- Backend proxy
-- Firebase Functions
-- Netlify Functions
+1. **Personalizar dados:** Edite `data.json` com seus dados
+2. **Publicar online:** Use GitHub Pages, Netlify, Vercel, etc.
+3. **Integrar com API:** Modifique `script.js` para carregar de uma API
 
 ## 📞 Suporte
 
-Para problemas ou dúvidas, abra uma [issue](https://github.com/rjardimsouza/mapa-expansao/issues).
+- 🐛 Encontrou um bug? Abra uma [issue](https://github.com/rjardimsouza/mapa-expansao/issues)
+- 💬 Tem sugestões? Deixe um comentário nas issues
+- 📧 Contacte: rjardim.souza@gmail.com
 
 ## 📄 Licença
 
-Este projeto é de código aberto. Sinta-se livre para usar e modificar.
+Este projeto é de código aberto e pode ser usado livremente.
 
 ---
 
 **Última atualização:** 29/04/2026
+**Versão:** 1.0.0
