@@ -1,4 +1,4 @@
-// Sample data structure - will be replaced with Google Sheets data
+// Sample data structure - will be replaced with Excel data
 const hierarchyData = [
     {
         id: 1,
@@ -10,60 +10,30 @@ const hierarchyData = [
         dataCriacao: "2017-12-03",
         ativa: true,
         proximaMultiplicacao: null
-    },
-    {
-        id: 2,
-        nome: "SHALOM",
-        tipo: "Supervisão",
-        idPai: 1,
-        idSupervisao: 1,
-        nomeExibicao: "SHALOM\nSUPERVISÃO",
-        dataCriacao: "2018-03-05",
-        ativa: true,
-        proximaMultiplicacao: null
-    },
-    {
-        id: 3,
-        nome: "CORDATUS",
-        tipo: "Supervisão",
-        idPai: 1,
-        idSupervisao: 2,
-        nomeExibicao: "CORDATUS\nSUPERVISÃO",
-        dataCriacao: "2018-08-15",
-        ativa: true,
-        proximaMultiplicacao: null
-    },
-    {
-        id: 4,
-        nome: "TRANSFORMAÇÃO",
-        tipo: "Supervisão",
-        idPai: 3,
-        idSupervisao: 3,
-        nomeExibicao: "TRANSFORMAÇÃO\nSUPERVISÃO",
-        dataCriacao: "2019-05-20",
-        ativa: true,
-        proximaMultiplicacao: null
-    },
-    {
-        id: 5,
-        nome: "ABA PAI",
-        tipo: "Célula",
-        idPai: 3,
-        idSupervisao: 3,
-        nomeExibicao: "ABA PAI\nCÉLULA",
-        dataCriacao: "2018-09-10",
-        ativa: false,
-        proximaMultiplicacao: null
     }
 ];
 
-// Load data from Google Sheets (placeholder)
+let currentData = hierarchyData;
+
+// Load data from localStorage or data.json
 async function loadHierarchyData() {
     try {
-        // This would be replaced with actual Google Sheets API call
-        // const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/...`);
-        // const data = await response.json();
-        // return data.values;
+        // Try localStorage first
+        const cachedData = xlsxHandler.getFromLocalStorage();
+        if (cachedData && cachedData.length > 0) {
+            console.log('Dados carregados do cache');
+            return cachedData;
+        }
+
+        // Try data.json
+        const response = await fetch('data.json');
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Dados carregados de data.json');
+            xlsxHandler.saveToLocalStorage(data);
+            return data;
+        }
+
         return hierarchyData;
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -75,7 +45,7 @@ async function loadHierarchyData() {
 function calcularMesesAteData(dataMultiplicacao) {
     if (!dataMultiplicacao) return null;
     
-    const hoje = new Date(2026, 3, 29); // Current date
+    const hoje = new Date();
     const data = new Date(dataMultiplicacao);
     
     const months = (data.getFullYear() - hoje.getFullYear()) * 12 + 
@@ -101,8 +71,9 @@ function getStatusIcon(meses) {
 
 // Format date to Portuguese
 function formatarData(dataString) {
+    if (!dataString) return '';
     const opcoes = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    const data = new Date(dataString);
+    const data = new Date(dataString + 'T00:00:00');
     return data.toLocaleDateString('pt-BR', opcoes);
 }
 
@@ -229,6 +200,18 @@ function atualizarResumo(dados) {
     }
 }
 
+// Update last update time display
+function atualizarTimestamp() {
+    const lastUpdate = xlsxHandler.getLastUpdate();
+    const lastUpdateEl = document.getElementById('lastUpdate');
+    
+    if (lastUpdateEl && lastUpdate) {
+        const date = new Date(lastUpdate);
+        const formatted = date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR');
+        lastUpdateEl.textContent = `Última atualização: ${formatted}`;
+    }
+}
+
 // Render hierarchy
 function renderizarHierarquia(dados) {
     const container = document.getElementById('hierarchyContainer');
@@ -251,35 +234,118 @@ function renderizarHierarquia(dados) {
             `;
         });
     
-    container.innerHTML = html;
+    container.innerHTML = html || '<p style="text-align: center; color: #999;">Nenhum dado para exibir</p>';
+}
+
+// Show modal
+function showModal(title, message, type = 'success') {
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    
+    modal.className = `modal ${type}`;
+    modal.style.display = 'flex';
+    
+    // Close on button click
+    document.getElementById('modalBtn').onclick = () => {
+        modal.style.display = 'none';
+    };
+    
+    // Close on X click
+    document.querySelector('.close').onclick = () => {
+        modal.style.display = 'none';
+    };
+    
+    // Close on outside click
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+// Update data from XLSX
+async function atualizarDados() {
+    const btn = document.getElementById('updateBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    
+    try {
+        console.log('Iniciando atualização...');
+        
+        // Convert XLSX to JSON
+        const novosDados = await xlsxHandler.xlsxToJson();
+        
+        if (!novosDados || novosDados.length === 0) {
+            throw new Error('Nenhum dado foi extraído do arquivo XLSX');
+        }
+        
+        // Save to localStorage
+        xlsxHandler.saveToLocalStorage(novosDados);
+        
+        // Update current data
+        currentData = novosDados;
+        
+        // Re-render everything
+        atualizarResumo(currentData);
+        renderizarHierarquia(currentData);
+        atualizarTimestamp();
+        
+        // Show success message
+        showModal(
+            '✅ Sucesso!',
+            `Dados atualizados com sucesso!\n\n${novosDados.length} registros carregados do arquivo XLSX.`,
+            'success'
+        );
+        
+        console.log('Atualização concluída:', novosDados.length, 'registros');
+        
+    } catch (error) {
+        console.error('Erro na atualização:', error);
+        showModal(
+            '❌ Erro na Atualização',
+            `Ocorreu um erro ao processar o arquivo XLSX:\n\n${error.message}`,
+            'error'
+        );
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
 }
 
 // Initialize application
 async function inicializarApp() {
     try {
+        // Load initial data
         const dados = await loadHierarchyData();
+        currentData = dados;
         
         // Update resume statistics
-        atualizarResumo(dados);
+        atualizarResumo(currentData);
         
         // Render hierarchy
-        renderizarHierarquia(dados);
+        renderizarHierarquia(currentData);
         
-        // Add click handlers for interactivity
-        document.querySelectorAll('.box').forEach(box => {
-            box.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                const item = dados.find(d => d.id === parseInt(id));
-                if (item) {
-                    console.log('Item clicado:', item);
-                    // Add your interaction logic here
-                }
-            });
-        });
+        // Update timestamp
+        atualizarTimestamp();
+        
+        // Add button event listener
+        const updateBtn = document.getElementById('updateBtn');
+        if (updateBtn) {
+            updateBtn.addEventListener('click', atualizarDados);
+        }
         
         console.log('Aplicação inicializada com sucesso');
     } catch (error) {
         console.error('Erro ao inicializar aplicação:', error);
+        showModal(
+            '⚠️ Aviso',
+            'Erro ao inicializar a aplicação. Usando dados de exemplo.',
+            'error'
+        );
     }
 }
 
